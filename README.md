@@ -49,10 +49,11 @@
 – Запуск.
 
 Получились репорты в формате .html – посмотрим, что там.
-![multiqc1](https://github.com/user-attachments/assets/cab7b255-9440-421d-9386-eb5cefbf4366)
+![multiqc0](https://github.com/user-attachments/assets/f7490f0d-27d0-4094-8031-50542cdd8c8a)
 Рисунок 2 – Репорт *multiQC*.
+
 #### msub1.fq:
-+ Процент дупликаций: 4.4% — невысокий процент дупликаций, что говорит о хорошем качестве данных.
++ Процент дупликаций: 4.5% — невысокий процент дупликаций, что говорит о хорошем качестве данных.
 + Процент GC: 44% — типичный уровень для большинства организмов.
 + Длина прочтений: 251 bp — длинные прочтения, что хорошо для
 сборки.
@@ -73,8 +74,24 @@ paired-end данных.
 #### pe1_sub.
 + Процент GC: 46% — как и в psub1.fq.
 
+![multiqc1](https://github.com/user-attachments/assets/2a341397-6baf-4cea-a6d1-4bebb4ff491b)
+Рисунок 3 – Среднее значение качества по каждой базовой позиции при чтении.
 
-Рисунок 3 – Репорт 
+![p1](https://github.com/user-attachments/assets/74039563-9dc4-461b-9dee-b4ff83c86282) 
+Рисунок 4 – Per base sequence quality для *psub1.fq*.
+![p2](https://github.com/user-attachments/assets/5c7210a1-c81d-4862-8568-2619c5508634)
+Рисунок 5 – Per base sequence quality для *psub2.fq*.
+
+Таким образом, *psub1.fq* и *psub2.fq* прошли проверку качества, так как имеют высокое качество, без значительных ошибок или деградации по позициям.
+
+![m1](https://github.com/user-attachments/assets/b528eb11-ff89-4bfd-ab94-816abe5d1dfe)
+Рисунок 6 – Per base sequence quality для *msub1.fq*.
+![m2](https://github.com/user-attachments/assets/fcf1c5f8-d367-4c04-af2a-b95ce0d9d248)
+Рисунок 7 – Per base sequence quality для *msub2.fq*.
+
+В свою очередь, *msub1.fq* и *msub2.fq* прошли проверку качества, так как имеют высокое качество, без значительных ошибок или деградации по позициям.
+
+
 ```
 !platanus_trim psub1.fq psub2.fq -q 25 -t 16 -l 100
 !platanus_trim msub1.fq msub2.fq -q 25 -t 16 -l 100
