@@ -1,3 +1,6 @@
+# ДЗ1.
+## Выполнила Михайлова Ирина Александровна.
+
 Выполнила задание в колабе.
 
 Посмотрим, что содержат файлы с ридами:
@@ -21,6 +24,8 @@
 !seqtk sample -s118 /content/hw1/oil_R1.fastq 5000000 > /content/hw1/psub1.fq
 !seqtk sample -s118 /content/hw1/oil_R2.fastq 5000000 > /content/hw1/psub2.fq
 ```
+## Оценка качества исходных данных секвенирования.
+
 Теперь у нас есть 4 файла, содержащие ограниченное количество случайно выбранных чтений. Оценим качество исходных чтений и получим по ним общую статистику с помощью программы *fastQC* и *multiQC*.
 ```
 !wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.9.zip
@@ -96,9 +101,16 @@ paired-end данных.
 
 График Per Sequence Quality Scores показывает, как распределяется среднее качество прочтений по всему набору данных. Он помогает определить наличие прочтений с низким качеством (в данном случае все риды имеют хорошее качество, так как по оси X достигают больших значений), а также узнать, как качество распределено по всему набору. Если большинство данных имеет высокое качество, то пик на графике будет находиться на стороне высоких значений (ближе к 40), что и произошло в нашем случае.
 
+![multiqc5](https://github.com/user-attachments/assets/0c63ed7b-f71f-4a78-b710-0c1c344151e9)
+Рисунок 9 – Наличие адаптерных последовательностей.
+
+По графику Adapter Content видно, что msub1.fq и msub2.fq содержат адаптерные последовательности, которые могут исказить результаты анализа, так как не являются частью исходного генома. Возможно из-за этого качество ридов плохое. Для этих последовательностей нужно проведём тримминг - удалим адаптеры с концов прочтений.
+
+С помощью программы *platanus* проведём тримминг ридов и соберём контиги и скаффолды.
+
 ```
-!platanus_trim psub1.fq psub2.fq -q 25 -t 16 -l 100
-!platanus_trim msub1.fq msub2.fq -q 25 -t 16 -l 100
+!platanus_trim psub1.fq psub2.fq -q 30 -t 16 -l 100
+!platanus_trim msub1.fq msub2.fq -q 30 -t 16 -l 100
 !fastqc *.trimmed
 !platanus assemble -o platanus -f psub1.fq.trimmed psub2.fq.trimmed -t 16
 !mv platanus* contigs 
@@ -109,3 +121,63 @@ paired-end данных.
 !platanus gap_close -o gap_close -c platanus_scaffold_scaffold.fa -IP1 psub1.fq.trimmed psub2.fq.trimmed -t 16
 !platanus gap_close -o gap_closeS -c plat_scaffold_scaffold.fa -IP1 msub1.fq.trimmed msub2.fq.trimmed -t 16
 ```
+
+## Анализ качества триммированных ридов.
+
+![multiqc02](https://github.com/user-attachments/assets/6b65e1b5-faa8-4376-9607-e1855ce9f06c)
+Рисунок 10 – Репорт *multiQC* для триммированных ридов.
+
++ Мы видим, что снизился процент дублирования - после тримминга срезались адаптеры (что мы видим на рисунке 11) и низкокачественные последовательности (рисунки 12-16), тем не менее, много дубликатов осталось.
++ Длина прочтений после тримминга сократилась, так как срезались адаптеры и низкокачественные участки в конце прочтений.
++ Количество прочтений после тримминга существенно уменьшилось для всех образцов. Это также ожидаемо, так как в процессе тримминга удаляются не только низкокачественные участки, но и некоторые прочтения, которые не соответствуют заданным критериям качества.
+
+![multiqc7](https://github.com/user-attachments/assets/bf5b44eb-6a99-4c9e-be91-54dfbbc5fa54)
+Рисунок 11 – Наличие адаптерных последовательностей.
+![multiqc12](https://github.com/user-attachments/assets/e4963a07-9d1c-4498-ae7c-1fd96956830d)
+Рисунок 12 – Среднее значение качества по каждой базовой позиции при чтении.
+![p11](https://github.com/user-attachments/assets/86d5e9e0-fc1f-4fdf-969a-c013dce52459)
+Рисунок 13 – Per base sequence quality для *psub1.fq*.
+![p22](https://github.com/user-attachments/assets/c954b865-2ea4-48cc-95fd-0bf655b7c673)
+Рисунок 14 – Per base sequence quality для *psub2.fq*.
+![m11](https://github.com/user-attachments/assets/e77c8820-cbe9-4b00-a4da-841b8e720f1c)
+Рисунок 15 – Per base sequence quality для *msub1.fq*.
+![m22](https://github.com/user-attachments/assets/a7a5c51a-2915-4c9a-ad0e-4a18bab9f185)
+Рисунок 16 – Per base sequence quality для *msub2.fq*.
+![multiqc22](https://github.com/user-attachments/assets/627375f1-1999-422d-aebc-232ac89aa399)
+Рисунок 17 – Оценка качества последовательностей.
+
+Качество последовательностей улучшилось.
+
+Качество секвенирования, анализируемое по плитке (tile) на секвенаторе сомнительное.  Показатель Per tile sequence quality для mp1_sub выявил несколько красных плиток на графике. Возможные причины: 
++ Неисправности в секвенаторе - могут влиять на качество прочтений в определенных местах. 
++ Наличие пыли, грязи, пузырьков воздуха на поверхности секвенируемой плитки может препятствовать процессу секвенирования.
++ Неравномерное распределение кластеров ДНК на плитке или их недостаток может также привести к снижению качества секвенирования в определенных зонах.
+
+## Анализ полученных контигов
+
+```
+f = open("/content/mate_contigs.fasta", "r", encoding='utf-8')
+print(f.read().count('>'))
+f.seek(0)
+lines = f.readlines()
+s = 0
+l = []
+for line in lines:
+    if line[0] != '>':
+        continue
+    j = line.find('length') + 3
+    k = line.find('_', j)
+    n = int(line[j:k])
+    s += n
+    l.append(n)
+print(s)
+l = sorted(l,reverse=True)
+print(l[0])
+s2, i = 0, 0
+while s2 < s * 0.5:
+    s2 += l[i]
+    i += 1
+print(l[i-1])
+f.close()
+```
+- Код для нахождения количества контигов, 
